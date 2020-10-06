@@ -35,6 +35,7 @@ CONFIG_FILE = os.path.join(CONFIG_DIR, "config.yaml")
 
 os.makedirs(CONFIG_DIR, exist_ok=True)
 
+
 class ParseError(Exception): pass
 
 

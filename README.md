@@ -25,17 +25,25 @@ repl:
 
 Commands
 ========
-`mode sql`
-Interact with search API using SQL mode for ElasticSearch queries.
+- `mode sql`
 
-`mode es`
-Interact with search API using ES mode for ElasticSearch queries.
+    Interact with search API using SQL mode for ElasticSearch queries.
 
-`mode enrich`
-Interact with the enrichment API using query strings.
+- `mode es`
 
-`copy`
-Copies the last query result to the clipboard.
+    Interact with search API using ES mode for ElasticSearch queries.
+
+- `mode enrich`
+
+    Interact with the enrichment API using query strings.
+
+- `copy`
+
+    Copies the last query result to the clipboard.
+
+- `ctrl+d`
+
+    Exit the REPL.
 
 Queries
 =======
