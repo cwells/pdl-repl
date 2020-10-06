@@ -6,6 +6,7 @@ import re
 from urllib.parse import parse_qs
 
 import click
+import pyperclip
 import requests
 import yaml
 from box import Box
@@ -37,6 +38,9 @@ os.makedirs(CONFIG_DIR, exist_ok=True)
 class ParseError(Exception): pass
 
 
+#
+# prompts
+#
 def enrich_prompt_session():
     return PromptSession(
         history = FileHistory(os.path.join(CONFIG_DIR, "enrich.history"))
@@ -81,6 +85,9 @@ def sql_prompt_session():
     )
 
 
+#
+# configuration
+#
 def read_config(ctx, param, value):
     '''read configuration file
     '''
@@ -128,6 +135,9 @@ def parse_mode(text):
     raise ValueError(mode)
 
 
+#
+# queries
+#
 def enrich_query(api_key, qs):
     '''parses URL query string and calls the enrichment API
     '''
@@ -171,9 +181,13 @@ def es_query(api_key, query, size=1, offset=0):
     return "Invalid ES query."
 
 
+#
+# repl
+#
 @click.command()
 @click.option('--config', '-c', callback=read_config, default=CONFIG_FILE, help="path to config file")
 def repl(config):
+    response = ''
     sessions = {
         'sql': sql_prompt_session(),
         'es': es_prompt_session(),
@@ -189,6 +203,13 @@ def repl(config):
             break  # Control-D pressed.
 
         if not text.strip():
+            continue
+
+        if text.lower().strip() == "copy":
+            if response:
+                pyperclip.copy(response)
+            else:
+                print("No data to copy.")
             continue
 
         if text.lower().startswith("mode "):
@@ -232,15 +253,19 @@ def repl(config):
                 qs = text,
             )
 
-        colorful_json = highlight(
-            response,
-            lexers.JsonLexer(),
-            formatters.TerminalFormatter()
+        print(
+            highlight(
+                response,
+                lexers.JsonLexer(),
+                formatters.TerminalFormatter()
+            )
         )
-        print(colorful_json)
 
     print("Exiting.")
 
 
+#
+# entrypoint
+#
 if __name__ == '__main__':
     repl()
