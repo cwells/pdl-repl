@@ -15,6 +15,7 @@ from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.styles import Style
+from prompt_toolkit.formatted_text import HTML
 from pygments.lexers import JsonLexer
 from pygments.lexers.sql import SqlLexer
 from pygments import highlight, lexers, formatters
@@ -42,50 +43,54 @@ class ParseError(Exception): pass
 #
 # prompts
 #
+def toolbar_factory(settings):
+    def toolbar():
+        status = "  ".join([ f"{k}={v}" for k, v in settings.items() ])
+        return HTML(
+            f'<style fg="blue" bg="white">{status:^40}</style>'
+            '      '
+            'Press [Alt+Enter] to evaluate an expression or [Ctrl+d] to exit.'
+        )
+    return toolbar
+
+
+def prompt_continuation(width, line_number, is_soft_wrap):
+    return '.' * width
+
+
 def enrich_prompt_session():
     return PromptSession(
         history = FileHistory(os.path.join(CONFIG_DIR, "enrich.history")),
-        multiline = True
+        multiline = True,
+        prompt_continuation = prompt_continuation,
     )
 
 
-def es_prompt_session():
+def es_prompt_session(settings):
     return PromptSession(
         lexer = PygmentsLexer(JsonLexer),
         style = PROMPT_STYLE,
         history = FileHistory(os.path.join(CONFIG_DIR, "es.history")),
-        multiline = True
+        multiline = True,
+        prompt_continuation = prompt_continuation,
+        bottom_toolbar = toolbar_factory(settings)
     )
 
 
-def sql_prompt_session():
-    sql_completer = WordCompleter("""
-        abort action add after all alter analyze and as
-        asc attach autoincrement before begin between by
-        cascade case cast check collate column commit
-        conflict constraint create cross current_date
-        current_time current_timestamp database default deferrable
-        deferred delete desc detach distinct drop each else
-        end escape except exclusive exists explain fail for
-        foreign from full glob group having if ignore
-        immediate in index indexed initially inner insert
-        instead intersect into is isnull join key left
-        like limit match natural no not notnull null of
-        offset on or order outer plan pragma primary
-        query raise recursive references regexp reindex
-        release rename replace restrict right rollback row
-        savepoint select set table temp temporary then to
-        transaction trigger union unique update using vacuum
-        values view virtual when where with without
+def sql_prompt_session(settings):
+    command_completer = WordCompleter("""
+            mode sql es enrich copy
         """.split(),
         ignore_case = True
     )
     return PromptSession(
         lexer = PygmentsLexer(SqlLexer),
-        completer = sql_completer,
+        completer = command_completer,
         style = PROMPT_STYLE,
         history = FileHistory(os.path.join(CONFIG_DIR, "sql.history")),
-        multiline = True
+        multiline = True,
+        prompt_continuation = prompt_continuation,
+        bottom_toolbar = toolbar_factory(settings)
     )
 
 
@@ -112,11 +117,19 @@ def read_config(ctx, param, value):
 def parse_set(text):
     '''set command allows changing configuration on the fly
     '''
-    match = re.match(r'set\s+(?P<var>[a-zA-Z]+)\s*=\s*(?P<val>[0-9]+)', text)
+    def str2bool(s):
+        return s.lower() == 'true'
+
+    typemap = {
+        'pretty': str2bool,
+        'size': int,
+        'offset': int,
+    }
+    match = re.match(r'set\s+(?P<var>[a-zA-Z]+)\s+(?P<val>.+)', text)
     if match:
         var = match.groupdict()['var']
         val = match.groupdict()['val']
-        return var, val
+        return var, typemap.get(var, str)(val)
 
     raise ParseError
 
@@ -150,7 +163,7 @@ def enrich_query(api_key, qs):
     response = requests.get(PDL_ENRICH_URL, params=params)
 
     if response.status_code == requests.codes.ok:
-        return json.dumps(response.json(), indent=2)
+        return response
 
     return "Invalid query."
 
@@ -165,7 +178,7 @@ def sql_query(api_key, sql, size=1, offset=0):
     params = { 'sql': sql, 'size': size, 'from': offset, 'pretty': True }
     response = requests.get(PDL_SEARCH_URL, headers=headers, params=params)
     if response.status_code == requests.codes.ok:
-        return json.dumps(response.json(), indent=2)
+        return response
 
     return "Invalid SQL query."
 
@@ -180,7 +193,7 @@ def es_query(api_key, query, size=1, offset=0):
     params = { 'query': query, 'size': size, 'from': offset, 'pretty': True }
     response = requests.get(PDL_SEARCH_URL, headers=headers, params=params)
     if response.status_code == requests.codes.ok:
-        return json.dumps(response.json(), indent=2)
+        return response
 
     return "Invalid ES query."
 
@@ -191,27 +204,27 @@ def es_query(api_key, query, size=1, offset=0):
 @click.command()
 @click.option('--config', '-c', callback=read_config, default=CONFIG_FILE, help="path to config file")
 def repl(config):
-    response = ''
+    result = ''
     sessions = {
-        'sql': sql_prompt_session(),
-        'es': es_prompt_session(),
+        'sql': sql_prompt_session(config.repl.search),
+        'es': es_prompt_session(config.repl.search),
         'enrich': enrich_prompt_session(),
     }
 
     while True:
         try:
-            text = sessions[config.repl.mode].prompt(f"{config.repl.mode}> ")
+            text = sessions[config.repl.mode].prompt(f"{config.repl.mode}> ").strip()
         except KeyboardInterrupt:
             continue  # Control-C pressed. Try again.
         except EOFError:
             break  # Control-D pressed.
 
-        if not text.strip():
+        if not text:
             continue
 
-        if text.lower().strip() == "copy":
-            if response:
-                pyperclip.copy(response)
+        if text.lower() == "copy":
+            if result:
+                pyperclip.copy(result)
             else:
                 print("No data to copy.")
             continue
@@ -233,8 +246,8 @@ def repl(config):
             except ParseError as e:
                 print("Invalid set command")
             else:
+                print(var, val)
                 config.repl.search[var] = val
-            print(config.repl.search)
             continue
 
         if config.repl.mode == 'sql':
@@ -257,9 +270,12 @@ def repl(config):
                 qs = text,
             )
 
+        result = json.dumps(
+            response.json(),
+            indent = 2 if config.repl.search.pretty else None)
         print(
             highlight(
-                response,
+                result,
                 lexers.JsonLexer(),
                 formatters.TerminalFormatter()
             )

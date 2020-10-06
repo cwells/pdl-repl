@@ -41,6 +41,13 @@ execute the command.
 
     Interact with the enrichment API using query strings.
 
+- `set <setting> <value>`
+
+    Change configuration settings on-the-fly, e.g.
+    ```
+    set size 10
+    ```
+
 - `copy`
 
     Copies the last query result to the clipboard.
