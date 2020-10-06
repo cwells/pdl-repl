@@ -44,7 +44,8 @@ class ParseError(Exception): pass
 #
 def enrich_prompt_session():
     return PromptSession(
-        history = FileHistory(os.path.join(CONFIG_DIR, "enrich.history"))
+        history = FileHistory(os.path.join(CONFIG_DIR, "enrich.history")),
+        multiline = True
     )
 
 
@@ -52,7 +53,8 @@ def es_prompt_session():
     return PromptSession(
         lexer = PygmentsLexer(JsonLexer),
         style = PROMPT_STYLE,
-        history = FileHistory(os.path.join(CONFIG_DIR, "es.history"))
+        history = FileHistory(os.path.join(CONFIG_DIR, "es.history")),
+        multiline = True
     )
 
 
@@ -82,7 +84,8 @@ def sql_prompt_session():
         lexer = PygmentsLexer(SqlLexer),
         completer = sql_completer,
         style = PROMPT_STYLE,
-        history = FileHistory(os.path.join(CONFIG_DIR, "sql.history"))
+        history = FileHistory(os.path.join(CONFIG_DIR, "sql.history")),
+        multiline = True
     )
 
 

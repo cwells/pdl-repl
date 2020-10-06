@@ -6,7 +6,7 @@ source path/to/venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
-Note: copy-to-clipboard feature requires `xclip` package on Linux.
+> Note: copy-to-clipboard feature requires `xclip` package on Linux.
 
 Configuration
 =============
@@ -25,6 +25,10 @@ repl:
 
 Commands
 ========
+> The REPL provides a multi-line buffer. As such, pressing `enter` will start a
+new line, but _not_ execute the command or query. You must press `alt+enter` to
+execute the command.
+
 - `mode sql`
 
     Interact with search API using SQL mode for ElasticSearch queries.
