@@ -41,6 +41,18 @@ class ParseError(Exception): pass
 
 
 #
+# help
+#
+def help():
+    strings = [
+        "mode [sql|es|enrich]\n\tchange REPL mode",
+        "set [size|offset|pretty] <value>\n\tchange settings",
+        "copy\n\tcopy last result to clipboard",
+    ]
+    return "\n".join(strings)
+
+
+#
 # prompts
 #
 def toolbar_factory(settings):
@@ -220,6 +232,10 @@ def repl(config):
             break  # Control-D pressed.
 
         if not text:
+            continue
+
+        if text.lower() == "help":
+            print(help())
             continue
 
         if text.lower() == "copy":
