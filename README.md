@@ -32,7 +32,7 @@ Interact with search API using SQL mode for ElasticSearch queries.
 Interact with search API using ES mode for ElasticSearch queries.
 
 `mode enrich`
-Interact with the enrichment API.
+Interact with the enrichment API using query strings.
 
 `copy`
 Copies the last query result to the clipboard.
