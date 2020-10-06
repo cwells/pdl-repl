@@ -56,6 +56,9 @@ execute the command.
 
     Exit the REPL.
 
+> The REPL uses readline, so general readline features are available, e.g. `ctrl+r`
+searches backwards in the history.
+
 Queries
 =======
 SQL mode
