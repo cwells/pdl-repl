@@ -40,10 +40,15 @@ def help():
 def read_config(ctx, param, value):
     '''read configuration file
     '''
-    defaults = Box(repl = {
-        'mode': 'sql',
-        'search': { 'size': 1, 'offset': 0, 'pretty': True }
-    })
+    defaults = Box(
+        repl = {
+            'mode': 'sql',
+            'editor': 'emacs',
+            'pretty': True,
+            'search': { 'size': 1, 'offset': 0 }
+        },
+        box_dots = True
+    )
     try:
         with open(value, 'rb') as config:
             defaults.merge_update(**yaml.load(config, Loader=yaml.FullLoader))
@@ -66,33 +71,16 @@ def command_set(text):
         'pretty': str2bool,
         'size': int,
         'offset': int,
+        'editor': str,
+        'mode': lambda m: m if m in ('sql', 'es', 'enrich') else 'sql',
     }
-    match = re.match(r'set\s+(?P<var>[a-zA-Z]+)\s+(?P<val>.+)', text)
+    match = re.match(r'set\s+(?P<var>[a-zA-Z.]+)\s+(?P<val>.+)', text)
     if match:
         var = match.groupdict()['var']
         val = match.groupdict()['val']
         return var, typemap.get(var, str)(val)
 
     raise ParseError
-
-
-def command_mode(text):
-    '''allow changing mode of repl
-    available modes are:
-    - es: ElasticSearch query
-    - sql: SQL query
-    - enrich: URL query string
-    '''
-    try:
-        _, mode = text.split()
-    except:
-        raise ParseError
-
-    if mode in ['es', 'sql', 'enrich']:
-        return mode
-
-    raise ValueError(mode)
-
 
 #
 # repl
@@ -102,9 +90,9 @@ def command_mode(text):
 def repl(config):
     result = ''
     sessions = {
-        'sql': modes.sql.prompt_session(config.repl.search, CONFIG_DIR),
-        'es': modes.es.prompt_session(config.repl.search, CONFIG_DIR),
-        'enrich': modes.enrich.prompt_session(CONFIG_DIR),
+        'sql': modes.sql.prompt_session(config.repl, CONFIG_DIR),
+        'es': modes.es.prompt_session(config.repl, CONFIG_DIR),
+        'enrich': modes.enrich.prompt_session(config.repl, CONFIG_DIR),
     }
 
     while True:
@@ -129,25 +117,13 @@ def repl(config):
                 print("No data to copy.")
             continue
 
-        if text.lower().startswith("mode "):
-            try:
-                mode = command_mode(text)
-            except ParseError as e:
-                print("Invalid mode command")
-            except ValueError as e:
-                print(f"Invalid mode '{e}'. Valid values are [sql, es, enrich]")
-            else:
-                config.repl.mode = mode
-            continue
-
         if text.lower().startswith("set "):
             try:
                 var, val = command_set(text)
             except ParseError as e:
                 print("Invalid set command")
             else:
-                print(var, val)
-                config.repl.search[var] = val
+                config.repl[var] = val
             continue
 
         response = getattr(modes, config.repl.mode).query(
@@ -159,7 +135,7 @@ def repl(config):
 
         result = json.dumps(
             response.json(),
-            indent = 2 if config.repl.search.pretty else None
+            indent = 2 if config.repl.pretty else None
         )
 
         print(

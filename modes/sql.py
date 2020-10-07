@@ -23,7 +23,8 @@ def prompt_session(settings, config_dir):
         history = FileHistory(os.path.join(config_dir, "sql.history")),
         multiline = True,
         prompt_continuation = prompt_continuation,
-        bottom_toolbar = toolbar_factory(settings)
+        bottom_toolbar = toolbar_factory(settings),
+        vi_mode = settings.editor == 'vi'
     )
 
 

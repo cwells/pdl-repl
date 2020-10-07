@@ -8,11 +8,12 @@ from prompt_toolkit.history import FileHistory
 from .common import (PDL_ENRICH_URL, PROMPT_STYLE, prompt_continuation, toolbar_factory)
 
 
-def prompt_session(config_dir):
+def prompt_session(settings, config_dir):
     return PromptSession(
         history = FileHistory(os.path.join(config_dir, "enrich.history")),
         multiline = True,
         prompt_continuation = prompt_continuation,
+        vi_mode = settings.editor == 'vi'
     )
 
 

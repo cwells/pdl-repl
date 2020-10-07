@@ -18,6 +18,7 @@ api_key: <your api key>
 
 repl:
   mode: sql
+  editor: vi
   search:
     size: 10
     pretty: True
@@ -25,28 +26,44 @@ repl:
 
 Commands
 ========
-> The REPL provides a multi-line buffer. As such, pressing `enter` will start a
+The REPL provides a multi-line buffer. As such, pressing `enter` will start a
 new line, but _not_ execute the command or query. You must press `alt+enter` to
 execute the command.
 
-- `mode sql`
+> The REPL uses readline, so general readline features are available,
+e.g. `ctrl+r`
+searches backwards in the history. When using `vi` mode, commands must be prefixed with `esc`.
+
+
+- `set mode sql`
 
     Interact with search API using SQL mode for ElasticSearch queries.
 
-- `mode es`
+- `set mode es`
 
     Interact with search API using ES mode for ElasticSearch queries.
 
-- `mode enrich`
+- `set mode enrich`
 
-    Interact with the enrichment API.
+    Interact with the enrichment API. Queries are passed as JSON.
 
-- `set <setting> <value>`
+- `set search.size <int>`
 
-    Change configuration settings on-the-fly, e.g.
+    Set size of return set, e.g.
     ```
-    set size 10
+    set search.size 10
     ```
+
+- `set search.offset <int>`
+
+    Set pagination offset , e.g.
+    ```
+    set search.offset 100
+    ```
+
+- `set editor [emacs|vi]`
+
+    Set keybindings.
 
 - `copy`
 
@@ -56,8 +73,6 @@ execute the command.
 
     Exit the REPL.
 
-> The REPL uses readline, so general readline features are available, e.g. `ctrl+r`
-searches backwards in the history.
 
 Queries
 =======

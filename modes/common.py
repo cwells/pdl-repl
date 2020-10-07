@@ -14,8 +14,17 @@ PROMPT_STYLE = Style.from_dict({
 
 
 def toolbar_factory(settings):
+    def tool_items(s, prefix=''):
+        for k, v in s.items():
+            if isinstance(v, dict):
+                for item in tool_items(v, prefix=f"{k}."):
+                    yield item
+            else:
+                yield f"{prefix}{k}:{v}"
+
     def toolbar():
-        status = "  ".join([ f"{k}={v}" for k, v in settings.items() ])
+        tools = list(tool_items(settings))
+        status = "  ".join(tools)
         return HTML(
             f'<style fg="blue" bg="white">{status:^40}</style>'
             '      '
@@ -25,5 +34,5 @@ def toolbar_factory(settings):
 
 
 def prompt_continuation(width, line_number, is_soft_wrap):
-    return '.' * width
+    return '.' * (width - 1) + ' '
 
