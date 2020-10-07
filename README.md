@@ -39,7 +39,7 @@ execute the command.
 
 - `mode enrich`
 
-    Interact with the enrichment API using query strings.
+    Interact with the enrichment API.
 
 - `set <setting> <value>`
 
@@ -83,7 +83,9 @@ Enrich mode
 -----------
 In this mode you provide the required parameters in the form of a URL query string:
 ```
-email=cliff.wells@gmail.com&email=cliff@peopledatalabs.com
+email=cliff@peopledatalabs.com,cliff.wells@gmail.com
+email=joebob@peopledatalabs.com
+region=Oregon
 ```
 
 History

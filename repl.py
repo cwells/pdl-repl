@@ -3,7 +3,8 @@
 import json
 import os
 import re
-from urllib.parse import parse_qs
+import io
+import csv
 
 import click
 import pyperclip
@@ -167,11 +168,19 @@ def parse_mode(text):
 #
 # queries
 #
-def enrich_query(api_key, qs):
-    '''parses URL query string and calls the enrichment API
+def enrich_query(api_key, query):
+    '''parses query and calls the enrichment API
     '''
-    query = parse_qs(qs)
-    params = { 'api_key': api_key, **query }
+    def parse_query(query):
+        params = {}
+        for line in query.split('\n'):
+            field, values = line.split('=', 1)
+            params.setdefault(field, [])
+            params[field].extend(list(csv.reader(io.StringIO(values))).pop())
+        print(params)
+        return params
+
+    params = { 'api_key': api_key, **parse_query(query) }
     response = requests.get(PDL_ENRICH_URL, params=params)
 
     if response.status_code == requests.codes.ok:
@@ -283,7 +292,7 @@ def repl(config):
         elif config.repl.mode == 'enrich':
             response = enrich_query(
                 api_key = config.api_key,
-                qs = text,
+                query = text,
             )
 
         result = json.dumps(
