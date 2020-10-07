@@ -8,29 +8,12 @@ import csv
 
 import click
 import pyperclip
-import requests
 import yaml
 from box import Box
-from prompt_toolkit import PromptSession
-from prompt_toolkit.completion import WordCompleter
-from prompt_toolkit.history import FileHistory
-from prompt_toolkit.lexers import PygmentsLexer
-from prompt_toolkit.styles import Style
-from prompt_toolkit.formatted_text import HTML
 from pygments.lexers import JsonLexer
-from pygments.lexers.sql import SqlLexer
 from pygments import highlight, lexers, formatters
 
-PDL_VERSION = "v5"
-PDL_ENRICH_URL = f"https://api.peopledatalabs.com/{PDL_VERSION}/person/enrich"
-PDL_SEARCH_URL = f"https://api.peopledatalabs.com/{PDL_VERSION}/person/search"
-
-PROMPT_STYLE = Style.from_dict({
-    "completion-menu.completion": "bg:#008888 #ffffff",
-    "completion-menu.completion.current": "bg:#00aaaa #000000",
-    "scrollbar.background": "bg:#88aaaa",
-    "scrollbar.button": "bg:#222222",
-})
+import modes
 
 CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".pdl-repl")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.yaml")
@@ -51,60 +34,6 @@ def help():
         "copy\n\tcopy last result to clipboard",
     ]
     return "\n".join(strings)
-
-
-#
-# prompts
-#
-def toolbar_factory(settings):
-    def toolbar():
-        status = "  ".join([ f"{k}={v}" for k, v in settings.items() ])
-        return HTML(
-            f'<style fg="blue" bg="white">{status:^40}</style>'
-            '      '
-            'Press [Alt+Enter] to evaluate an expression or [Ctrl+d] to exit.'
-        )
-    return toolbar
-
-
-def prompt_continuation(width, line_number, is_soft_wrap):
-    return '.' * width
-
-
-def enrich_prompt_session():
-    return PromptSession(
-        history = FileHistory(os.path.join(CONFIG_DIR, "enrich.history")),
-        multiline = True,
-        prompt_continuation = prompt_continuation,
-    )
-
-
-def es_prompt_session(settings):
-    return PromptSession(
-        lexer = PygmentsLexer(JsonLexer),
-        style = PROMPT_STYLE,
-        history = FileHistory(os.path.join(CONFIG_DIR, "es.history")),
-        multiline = True,
-        prompt_continuation = prompt_continuation,
-        bottom_toolbar = toolbar_factory(settings)
-    )
-
-
-def sql_prompt_session(settings):
-    command_completer = WordCompleter("""
-            mode sql es enrich copy
-        """.split(),
-        ignore_case = True
-    )
-    return PromptSession(
-        lexer = PygmentsLexer(SqlLexer),
-        completer = command_completer,
-        style = PROMPT_STYLE,
-        history = FileHistory(os.path.join(CONFIG_DIR, "sql.history")),
-        multiline = True,
-        prompt_continuation = prompt_continuation,
-        bottom_toolbar = toolbar_factory(settings)
-    )
 
 
 #
@@ -166,51 +95,6 @@ def parse_mode(text):
 
 
 #
-# queries
-#
-def enrich_query(api_key, query):
-    '''calls enrichment API with JSON params
-    '''
-    params = { 'api_key': api_key, **json.loads(query) }
-    response = requests.get(PDL_ENRICH_URL, params=params)
-
-    if response.status_code == requests.codes.ok:
-        return response
-
-    return "Invalid query."
-
-
-def sql_query(api_key, sql, size=1, offset=0):
-    '''ElasticSearch SQL query
-    '''
-    headers = {
-        'Content-Type': 'application/json',
-        'X-api-key': api_key
-    }
-    params = { 'sql': sql, 'size': size, 'from': offset, 'pretty': True }
-    response = requests.get(PDL_SEARCH_URL, headers=headers, params=params)
-    if response.status_code == requests.codes.ok:
-        return response
-
-    return "Invalid SQL query."
-
-
-def es_query(api_key, query, size=1, offset=0):
-    '''ElasticSearch query
-    '''
-    headers = {
-        'Content-Type': 'application/json',
-        'X-api-key': api_key
-    }
-    params = { 'query': query, 'size': size, 'from': offset, 'pretty': True }
-    response = requests.get(PDL_SEARCH_URL, headers=headers, params=params)
-    if response.status_code == requests.codes.ok:
-        return response
-
-    return "Invalid ES query."
-
-
-#
 # repl
 #
 @click.command()
@@ -218,9 +102,9 @@ def es_query(api_key, query, size=1, offset=0):
 def repl(config):
     result = ''
     sessions = {
-        'sql': sql_prompt_session(config.repl.search),
-        'es': es_prompt_session(config.repl.search),
-        'enrich': enrich_prompt_session(),
+        'sql': modes.sql.prompt_session(config.repl.search, CONFIG_DIR),
+        'es': modes.es.prompt_session(config.repl.search, CONFIG_DIR),
+        'enrich': modes.enrich.prompt_session(CONFIG_DIR),
     }
 
     while True:
@@ -267,21 +151,21 @@ def repl(config):
             continue
 
         if config.repl.mode == 'sql':
-            response = sql_query(
+            response = modes.sql.query(
                 api_key = config.api_key,
                 sql = text,
                 size = config.repl.search.size,
                 offset = config.repl.search.offset
             )
         elif config.repl.mode == 'es':
-            response = es_query(
+            response = modes.es.query(
                 api_key = config.api_key,
                 query = text,
                 size = config.repl.search.size,
                 offset = config.repl.search.offset
             )
         elif config.repl.mode == 'enrich':
-            response = enrich_query(
+            response = modes.enrich.query(
                 api_key = config.api_key,
                 query = text,
             )
