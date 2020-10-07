@@ -1,6 +1,5 @@
-from prompt_toolkit.styles import Style
 from prompt_toolkit.formatted_text import HTML
-
+from prompt_toolkit.styles import Style
 
 PDL_VERSION = "v5"
 PDL_ENRICH_URL = f"https://api.peopledatalabs.com/{PDL_VERSION}/person/enrich"
