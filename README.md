@@ -31,8 +31,8 @@ new line, but _not_ execute the command or query. You must press `alt+enter` to
 execute the command.
 
 > The REPL uses readline, so general readline features are available,
-e.g. `ctrl+r`
-searches backwards in the history. When using `vi` mode, commands must be prefixed with `esc`.
+ e.g. `ctrl+r` searches backwards in the history.
+When using `vi` mode, commands must be prefixed with `esc`.
 
 
 - `set mode sql`
