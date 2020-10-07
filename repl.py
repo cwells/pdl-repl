@@ -22,21 +22,15 @@ os.makedirs(CONFIG_DIR, exist_ok=True)
 class ParseError(Exception): pass
 
 
-#
-# help
-#
 def help():
     strings = [
         "mode [sql|es|enrich]\n\tchange REPL mode",
-        "set [size|offset|pretty] <value>\n\tchange settings",
+        "set <var> <value>\n\tchange settings",
         "copy\n\tcopy last result to clipboard",
     ]
     return "\n".join(strings)
 
 
-#
-# configuration
-#
 def read_config(ctx, param, value):
     '''read configuration file
     '''
@@ -59,9 +53,6 @@ def read_config(ctx, param, value):
     return defaults
 
 
-#
-# commands
-#
 def command_set(text):
     '''set command allows changing configuration on the fly
     '''
@@ -72,7 +63,6 @@ def command_set(text):
         'pretty': str2bool,
         'size': int,
         'offset': int,
-        'editor': str,
         'mode': lambda m: m if m in ('sql', 'es', 'enrich') else 'sql',
     }
     match = re.match(r'set\s+(?P<var>[a-zA-Z.]+)\s+(?P<val>.+)', text)
