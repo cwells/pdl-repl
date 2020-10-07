@@ -288,7 +288,9 @@ def repl(config):
 
         result = json.dumps(
             response.json(),
-            indent = 2 if config.repl.search.pretty else None)
+            indent = 2 if config.repl.search.pretty else None
+        )
+
         print(
             highlight(
                 result,
