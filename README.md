@@ -84,8 +84,8 @@ Enrich mode
 In this mode you provide the required parameters in JSON form:
 ```json
 {
-    "email": [ "cliff@peopledatalabs.com", "cliff.wells@gmail.com" ],
-    "region": "Oregon"
+    "email": ["cliff@peopledatalabs.com", "cliff.wells@gmail.com"],
+    "region": ["Oregon"]
 }
 ```
 
