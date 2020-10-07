@@ -53,8 +53,10 @@ def read_config(ctx, param, value):
 
     return defaults
 
-
-def parse_set(text):
+#
+# commands
+#
+def command_set(text):
     '''set command allows changing configuration on the fly
     '''
     def str2bool(s):
@@ -74,7 +76,7 @@ def parse_set(text):
     raise ParseError
 
 
-def parse_mode(text):
+def command_mode(text):
     '''allow changing mode of repl
     available modes are:
     - es: ElasticSearch query
@@ -129,7 +131,7 @@ def repl(config):
 
         if text.lower().startswith("mode "):
             try:
-                mode = parse_mode(text)
+                mode = command_mode(text)
             except ParseError as e:
                 print("Invalid mode command")
             except ValueError as e:
@@ -140,7 +142,7 @@ def repl(config):
 
         if text.lower().startswith("set "):
             try:
-                var, val = parse_set(text)
+                var, val = command_set(text)
             except ParseError as e:
                 print("Invalid set command")
             else:
