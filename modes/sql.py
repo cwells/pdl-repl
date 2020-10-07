@@ -27,14 +27,14 @@ def prompt_session(settings, config_dir):
     )
 
 
-def query(api_key, sql, size=1, offset=0):
+def query(api_key, query, size=1, offset=0):
     '''ElasticSearch SQL query
     '''
     headers = {
         'Content-Type': 'application/json',
         'X-api-key': api_key
     }
-    params = { 'sql': sql, 'size': size, 'from': offset, 'pretty': True }
+    params = { 'sql': query, 'size': size, 'from': offset, 'pretty': True }
     response = requests.get(PDL_SEARCH_URL, headers=headers, params=params)
     if response.status_code == requests.codes.ok:
         return response

@@ -150,25 +150,12 @@ def repl(config):
                 config.repl.search[var] = val
             continue
 
-        if config.repl.mode == 'sql':
-            response = modes.sql.query(
-                api_key = config.api_key,
-                sql = text,
-                size = config.repl.search.size,
-                offset = config.repl.search.offset
-            )
-        elif config.repl.mode == 'es':
-            response = modes.es.query(
-                api_key = config.api_key,
-                query = text,
-                size = config.repl.search.size,
-                offset = config.repl.search.offset
-            )
-        elif config.repl.mode == 'enrich':
-            response = modes.enrich.query(
-                api_key = config.api_key,
-                query = text,
-            )
+        response = getattr(modes, config.repl.mode).query(
+            api_key = config.api_key,
+            query = text,
+            size = config.repl.search.size,
+            offset = config.repl.search.offset
+        )
 
         result = json.dumps(
             response.json(),

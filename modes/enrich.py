@@ -16,7 +16,7 @@ def prompt_session(config_dir):
     )
 
 
-def query(api_key, query):
+def query(api_key, query, *args, **kw):
     '''calls enrichment API with JSON params
     '''
     params = { 'api_key': api_key, **json.loads(query) }
