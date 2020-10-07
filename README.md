@@ -15,13 +15,12 @@ the following content:
 ```yaml
 ---
 api_key: <your api key>
-
 repl:
   mode: sql
   editor: vi
+  pretty: True
   search:
     size: 10
-    pretty: True
 ```
 
 Commands
