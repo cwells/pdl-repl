@@ -81,11 +81,12 @@ ES mode
 
 Enrich mode
 -----------
-In this mode you provide the required parameters in the form of a URL query string:
-```
-email=cliff@peopledatalabs.com,cliff.wells@gmail.com
-email=joebob@peopledatalabs.com
-region=Oregon
+In this mode you provide the required parameters in JSON form:
+```json
+{
+    "email": [ "cliff@peopledatalabs.com", "cliff.wells@gmail.com" ],
+    "region": "Oregon"
+}
 ```
 
 History

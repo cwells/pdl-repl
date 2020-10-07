@@ -169,18 +169,9 @@ def parse_mode(text):
 # queries
 #
 def enrich_query(api_key, query):
-    '''parses query and calls the enrichment API
+    '''calls enrichment API with JSON params
     '''
-    def parse_query(query):
-        params = {}
-        for line in query.split('\n'):
-            field, values = line.split('=', 1)
-            params.setdefault(field, [])
-            params[field].extend(list(csv.reader(io.StringIO(values))).pop())
-        print(params)
-        return params
-
-    params = { 'api_key': api_key, **parse_query(query) }
+    params = { 'api_key': api_key, **json.loads(query) }
     response = requests.get(PDL_ENRICH_URL, params=params)
 
     if response.status_code == requests.codes.ok:
