@@ -3,8 +3,6 @@
 import json
 import os
 import re
-import io
-import csv
 
 import click
 import pyperclip
