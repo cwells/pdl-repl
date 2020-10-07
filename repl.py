@@ -58,6 +58,7 @@ def read_config(ctx, param, value):
 
     return defaults
 
+
 #
 # commands
 #
@@ -81,6 +82,7 @@ def command_set(text):
         return var, typemap.get(var, str)(val)
 
     raise ParseError
+
 
 #
 # repl

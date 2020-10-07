@@ -26,7 +26,7 @@ def toolbar_factory(settings):
         tools = list(tool_items(settings))
         status = "  ".join(tools)
         return HTML(
-            f'<style fg="blue" bg="white">{status:^40}</style>'
+            f'<style fg="blue" bg="white">  {status:^40}  </style>'
             '      '
             'Press [Alt+Enter] to evaluate an expression or [Ctrl+d] to exit.'
         )
